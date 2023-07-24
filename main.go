@@ -30,7 +30,7 @@ func main() {
 	e.Use(middleware.Static("static"))
 
 	// Routes
-	e.POST("/api/endpoint1", endpoint1Handler)
+	e.POST("/api/endpoint1", endpoint1Handler) // e.g. curl -X POST http://localhost:8080/api/endpoint1
 	e.POST("/api/endpoint2", endpoint2Handler)
 
 	e.GET("/version", func(c echo.Context) error {
