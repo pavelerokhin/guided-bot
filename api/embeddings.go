@@ -3,10 +3,11 @@ package api
 import (
 	"bytes"
 	"encoding/json"
+	"io"
+	"net/http"
+
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
-	"io/ioutil"
-	"net/http"
 )
 
 type EmbeddingsRequest struct {
@@ -30,7 +31,7 @@ type EmbeddingsResponse struct {
 }
 
 // https://platform.openai.com/docs/api-reference/embeddings
-func Embedding(c echo.Context) error {
+func CreateEmbeddings(c echo.Context) error {
 	openAPIKey := viper.GetString("openAI.apiKey")
 
 	var embeddingsReq EmbeddingsRequest
@@ -61,7 +62,7 @@ func Embedding(c echo.Context) error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}

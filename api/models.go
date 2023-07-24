@@ -3,10 +3,11 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/labstack/echo/v4"
-	"github.com/spf13/viper"
 	"io"
 	"net/http"
+
+	"github.com/labstack/echo/v4"
+	"github.com/spf13/viper"
 )
 
 type Model struct {

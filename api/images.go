@@ -7,10 +7,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
-	"strconv"
 )
 
 type ImageGenerationRequest struct {
@@ -30,7 +28,52 @@ type ImageResult struct {
 	URL string `json:"url"`
 }
 
-func ImageEditing(c echo.Context) error {
+func CreateImage(c echo.Context) error {
+	openAPIKey := viper.GetString("openAI.apiKey")
+
+	var imageGenReq ImageGenerationRequest
+	err := c.Bind(&imageGenReq)
+	if err != nil {
+		return err
+	}
+
+	reqBody, err := json.Marshal(imageGenReq)
+	if err != nil {
+		return err
+	}
+
+	url := "https://api.openai.com/v1/images/generations"
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(reqBody))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+openAPIKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	var imageGenResp ImageGenerationResponse
+	err = json.Unmarshal(body, &imageGenResp)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, imageGenResp)
+}
+
+func CreateImageEdit(c echo.Context) error {
 	openAPIKey := viper.GetString("openAI.apiKey")
 
 	prompt := c.FormValue("prompt")
@@ -112,7 +155,7 @@ func ImageEditing(c echo.Context) error {
 	defer resp.Body.Close()
 
 	// Read the response
-	responseBody, err := ioutil.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
@@ -127,52 +170,7 @@ func ImageEditing(c echo.Context) error {
 	return c.JSON(http.StatusOK, imageGenResp)
 }
 
-func ImageGeneration(c echo.Context) error {
-	openAPIKey := viper.GetString("openAI.apiKey")
-
-	var imageGenReq ImageGenerationRequest
-	err := c.Bind(&imageGenReq)
-	if err != nil {
-		return err
-	}
-
-	reqBody, err := json.Marshal(imageGenReq)
-	if err != nil {
-		return err
-	}
-
-	url := "https://api.openai.com/v1/images/generations"
-
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(reqBody))
-	if err != nil {
-		return err
-	}
-
-	req.Header.Set("Authorization", "Bearer "+openAPIKey)
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	var imageGenResp ImageGenerationResponse
-	err = json.Unmarshal(body, &imageGenResp)
-	if err != nil {
-		return err
-	}
-
-	return c.JSON(http.StatusOK, imageGenResp)
-}
-
-func ImageVariation(c echo.Context) error {
+func CreateImageVariation(c echo.Context) error {
 	openAPIKey := viper.GetString("openAI.apiKey")
 
 	n := 1
@@ -233,7 +231,7 @@ func ImageVariation(c echo.Context) error {
 	defer resp.Body.Close()
 
 	// Read the response
-	responseBody, err := ioutil.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
@@ -246,13 +244,4 @@ func ImageVariation(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, imageGenResp)
-}
-
-// atoi converts a string to an integer, returning 0 in case of an error.
-func atoi(s string) int {
-	val, err := strconv.Atoi(s)
-	if err != nil {
-		return 0
-	}
-	return val
 }

@@ -54,17 +54,17 @@ func main() {
 	e.POST("/edit", api.Edit)
 
 	// completion
-	e.POST("/completion", api.Completion)
+	e.POST("/completion", api.CreateCompletion)
 
 	// embeddings
-	e.POST("/embedding", api.Embedding)
+	e.POST("/embedding", api.CreateEmbeddings)
 
 	// audio
 	e.POST("/audio/transcription", api.Transcription)
 	e.POST("/audio/tts", api.TTS)
 
 	// images
-	e.POST("/images/generation", api.ImageGeneration)
+	e.POST("/images/generation", api.CreateImage)
 
 	if ImageDir != "" {
 		e.Static("/generated-images", ImageDir)
