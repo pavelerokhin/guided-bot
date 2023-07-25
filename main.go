@@ -43,35 +43,16 @@ func main() {
 		return c.String(200, "v0.0.1")
 	})
 
-	e.GET("/models/list", api.List)
-	e.GET("/models/retireve", api.Retrieve)
-
-	// openAI compatible API endpoint
-	// chat
-	//e.POST("/chat", api.CreateChat)
-
-	// edit
-	//e.POST("/edit", api.Edit)
-
-	// completion
-	e.POST("/completion", api.CreateCompletion)
-
-	// embeddings
-	e.POST("/embedding", api.CreateEmbeddings)
-
 	// audio
-	//e.POST("/audio/transcription", api.Transcription)
-	//e.POST("/audio/tts", api.TTS)
-
-	// images
-	e.POST("/images/generation", api.CreateImage)
+	e.POST("/audio/transcription", api.CreateTranscription)
+	e.POST("/audio/translation", api.CreateTranslation)
 
 	if ImageDir != "" {
-		e.Static("/generated-images", ImageDir)
+		e.Static("/assets/images", ImageDir)
 	}
 
 	if AudioDir != "" {
-		e.Static("/generated-audio", AudioDir)
+		e.Static("/assets/audio", AudioDir)
 	}
 
 	// Start the server
