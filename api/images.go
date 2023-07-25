@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/labstack/echo/v4"
-	"github.com/spf13/viper"
 	"io"
 	"mime/multipart"
 	"net/http"
+
+	"github.com/labstack/echo/v4"
+	"github.com/spf13/viper"
 )
 
 type ImageGenerationRequest struct {

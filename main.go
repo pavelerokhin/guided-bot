@@ -48,10 +48,10 @@ func main() {
 
 	// openAI compatible API endpoint
 	// chat
-	e.POST("/chat", api.Chat)
+	//e.POST("/chat", api.CreateChat)
 
 	// edit
-	e.POST("/edit", api.Edit)
+	//e.POST("/edit", api.Edit)
 
 	// completion
 	e.POST("/completion", api.CreateCompletion)
@@ -60,8 +60,8 @@ func main() {
 	e.POST("/embedding", api.CreateEmbeddings)
 
 	// audio
-	e.POST("/audio/transcription", api.Transcription)
-	e.POST("/audio/tts", api.TTS)
+	//e.POST("/audio/transcription", api.Transcription)
+	//e.POST("/audio/tts", api.TTS)
 
 	// images
 	e.POST("/images/generation", api.CreateImage)
