@@ -1,7 +1,7 @@
 package main
 
 import (
-	"OpenAI-api/api"
+	"OpenAI-api/api/audio"
 	"fmt"
 	"github.com/spf13/viper"
 	"os"
@@ -44,8 +44,8 @@ func main() {
 	})
 
 	// audio
-	e.POST("/audio/transcription", api.CreateTranscription)
-	e.POST("/audio/translation", api.CreateTranslation)
+	e.POST("/audio/transcription", audio.CreateTranscription)
+	e.POST("/audio/translation", audio.CreateTranslation)
 
 	if ImageDir != "" {
 		e.Static("/assets/images", ImageDir)

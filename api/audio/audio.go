@@ -1,4 +1,4 @@
-package api
+package audio
 
 import (
 	"bytes"
@@ -12,21 +12,17 @@ import (
 	"github.com/spf13/viper"
 )
 
-type AudioParameters struct {
-	File           string  `json:"file"`
-	Model          string  `json:"model"`  // ID of the model to use. Only whisper-1 is currently available.
-	Prompt         string  `json:"prompt"` // If set should match audio language
-	ResponseFormat string  `json:"response_format"`
-	Temperature    float32 `json:"temperature"`
-	Language       string  `json:"language"` // The language of the input audio. Supplying the input language in ISO-639-1 format will improve accuracy and latency.
-}
+const (
+	transcriptionUrl = "https://api.openai.com/v1/audio/transcriptions"
+	translationUrl   = "https://api.openai.com/v1/audio/translations"
+)
 
 func CreateTranscription(c echo.Context) error {
-	return processAudioRequest(c, "https://api.openai.com/v1/audio/transcriptions")
+	return processAudioRequest(c, transcriptionUrl)
 }
 
 func CreateTranslation(c echo.Context) error {
-	return processAudioRequest(c, "https://api.openai.com/v1/audio/translations")
+	return processAudioRequest(c, translationUrl)
 }
 
 func processAudioRequest(c echo.Context, url string) error {
@@ -35,12 +31,12 @@ func processAudioRequest(c echo.Context, url string) error {
 		return echo.NewHTTPError(http.StatusUnauthorized, "OpenAI API key not found")
 	}
 
-	params, err := getParams(c)
+	requestBody, err := getRequestBody(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	req, err := makeRequest(params, url, apiKey)
+	req, err := makeRequest(requestBody, url, apiKey)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
@@ -53,21 +49,21 @@ func processAudioRequest(c echo.Context, url string) error {
 	return c.JSON(http.StatusOK, body)
 }
 
-func getParams(c echo.Context) (*AudioParameters, error) {
-	params := AudioParameters{}
+func getRequestBody(c echo.Context) (*RequestBody, error) {
+	params := RequestBody{}
 
 	if err := c.Bind(&params); err != nil {
 		return nil, err
 	}
 
 	if params.Model == "" || params.File == "" {
-		return &params, errors.New("Required parameters are not set")
+		return &params, errors.New("required parameters are not set (required: Model, File)")
 	}
 
 	return &params, nil
 }
 
-func makeRequest(params *AudioParameters, url, openAPIKey string) (*http.Request, error) {
+func makeRequest(params *RequestBody, url, apiKey string) (*http.Request, error) {
 	// Convert the fields to JSON format
 	data, err := json.Marshal(params)
 	if err != nil {
@@ -80,8 +76,8 @@ func makeRequest(params *AudioParameters, url, openAPIKey string) (*http.Request
 		return nil, err
 	}
 
-	if openAPIKey != "" {
-		req.Header.Set("Authorization", "Bearer "+openAPIKey)
+	if apiKey != "" {
+		req.Header.Set("Authorization", "Bearer "+apiKey)
 	}
 
 	req.Header.Set("Content-Type", "multipart/form-data")

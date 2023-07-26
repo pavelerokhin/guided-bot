@@ -1,8 +1,10 @@
-package api
+package audio
 
 import (
 	"bytes"
+	"encoding/json"
 	"github.com/spf13/viper"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -94,7 +96,7 @@ func TestGetParams_Success(t *testing.T) {
 	// Create a mock context
 	c := MockContext()
 
-	// Set the request body with valid AudioParameters data
+	// Set the request body with valid RequestBody data
 	reqBody := `{
 		"file": "example.wav",
 		"model": "whisper-1",
@@ -108,16 +110,16 @@ func TestGetParams_Success(t *testing.T) {
 	rec := httptest.NewRecorder()
 	c = echo.New().NewContext(req, rec)
 
-	// Call the getParams function
-	params, err := getParams(c)
+	// Call the getRequestBody function
+	params, err := getRequestBody(c)
 
 	// Check if there is no error
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
 	}
 
-	// Check if the returned AudioParameters match the expected values
-	expectedParams := AudioParameters{
+	// Check if the returned RequestBody match the expected values
+	expectedParams := RequestBody{
 		File:           "example.wav",
 		Model:          "whisper-1",
 		Prompt:         "This is a prompt",
@@ -148,11 +150,67 @@ func TestGetParams_UnmarshallParametersFail(t *testing.T) {
 	rec := httptest.NewRecorder()
 	c = echo.New().NewContext(req, rec)
 
-	// Call the getParams function
-	params, err := getParams(c)
+	// Call the getRequestBody function
+	params, err := getRequestBody(c)
 
 	// Check if the error is the expected error indicating missing required parameters
 	assert.Error(t, err)
 	assert.ErrorContains(t, err, "Unmarshal type error")
 	assert.Empty(t, params)
+}
+
+func TestMakeRequest(t *testing.T) {
+	// Prepare the test data
+	url := "https://api.openai.com/v1/audio/transcriptions"
+	params := RequestBody{
+		File:           "example.wav",
+		Model:          "whisper-1",
+		Prompt:         "This is a prompt",
+		ResponseFormat: "json",
+		Temperature:    0.8,
+		Language:       "en",
+	}
+
+	// Mock the API key
+	apiKey := "your_openai_api_key"
+
+	// Call the makeRequest function
+	req, err := makeRequest(&params, url, apiKey)
+
+	// Check if there is no error
+	if err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+
+	// Check if the request attributes are correct
+	if req.Method != http.MethodPost {
+		t.Errorf("Expected POST method, got: %s", req.Method)
+	}
+
+	if req.URL.String() != url {
+		t.Errorf("Expected URL %s, got: %s", url, req.URL.String())
+	}
+
+	if req.Header.Get("Authorization") != "Bearer "+apiKey {
+		t.Errorf("Expected Authorization header with API key, got: %s", req.Header.Get("Authorization"))
+	}
+
+	if req.Header.Get("Content-Type") != "multipart/form-data" {
+		t.Errorf("Expected Content-Type header application/json, got: %s", req.Header.Get("Content-Type"))
+	}
+
+	// Read and compare the request body
+	expectedBody, err := json.Marshal(params)
+	if err != nil {
+		t.Fatalf("Error marshaling expected body: %v", err)
+	}
+
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		t.Fatalf("Error reading request body: %v", err)
+	}
+
+	if !bytes.Equal(body, expectedBody) {
+		t.Errorf("Expected request body:\n%s\ngot:\n%s", expectedBody, body)
+	}
 }
