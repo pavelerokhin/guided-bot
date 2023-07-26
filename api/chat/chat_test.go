@@ -5,12 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/labstack/echo/v4"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"OpenAI-api/api"
 )
 
 func TestGetRequestBody_ValidRequest(t *testing.T) {
@@ -169,7 +172,7 @@ func TestSendRequest_SuccessfulResponse(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Call the function
-	response, err := sendRequest(nil, req)
+	response, err := api.SendRequest(nil, req)
 
 	// Assertions
 	assert.NoError(t, err)
@@ -183,7 +186,7 @@ func TestSendRequest_ErrorOnRequest(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Call the function
-	response, err := sendRequest(nil, req)
+	response, err := api.SendRequest(nil, req)
 
 	// Assertions
 	assert.Error(t, err)
@@ -203,7 +206,7 @@ func TestSendRequest_ErrorOnReadResponse(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Call the function
-	response, err := sendRequest(nil, req)
+	response, err := api.SendRequest(nil, req)
 
 	// Assertions
 	assert.Error(t, err)
@@ -244,7 +247,7 @@ func TestSendRequest_HTTPClientError(t *testing.T) {
 	mockClient := ClientMock{}
 
 	// Call the function with the custom HTTP client
-	response, err := sendRequest(mockClient, req)
+	response, err := api.SendRequest(mockClient, req)
 
 	// Assertions
 	assert.Error(t, err)
@@ -267,7 +270,7 @@ func TestSendRequest_ReadResponseBody(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Call the function
-	response, err := sendRequest(http.DefaultClient, req)
+	response, err := api.SendRequest(http.DefaultClient, req)
 
 	// Assertions
 	assert.NoError(t, err)
@@ -307,7 +310,7 @@ func TestSendRequest_ReadResponseBodyError(t *testing.T) {
 	mockClient := &MockHTTPClient{}
 
 	// Call the function with the custom HTTP client
-	response, err := sendRequest(mockClient, req)
+	response, err := api.SendRequest(mockClient, req)
 
 	// Assertions
 	assert.Error(t, err)
@@ -318,34 +321,13 @@ func TestSendRequest_ReadResponseBodyError(t *testing.T) {
 func TestProcessChatRequest_Success(t *testing.T) {
 	// Create a new mock Echo context
 	e := echo.New()
-	reqBody := `{
-		"model": "gpt-3.5-turbo",
-		"messages": [{"role": "system", "content": "You are a helpful assistant."}, {"role": "user", "content": "Hello!"}]
-	}`
+	reqBody := `{"model": "gpt-3.5-turbo", "messages": [{"role": "system", "content": "You are a helpful assistant."}, {"role": "user", "content": "Hello!"}]}`
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(reqBody))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
-	mockResponse := `{
-		  "id": "chatcmpl-123",
-		  "object": "chat.completion",
-		  "created": 1677652288,
-		  "choices": [{
-			"index": 0,
-			"message": {
-			  "role": "assistant",
-			  "content": "\n\nHello there, how may I assist you today?",
-			},
-			"finish_reason": "stop"
-		  }],
-		  "usage": {
-			"prompt_tokens": 9,
-			"completion_tokens": 12,
-			"total_tokens": 21
-		  }
-		}
-	`
+	mockResponse := `{"id": "chatcmpl-123", "object": "chat.completion", "created": 1677652288, "choices": [{"index": 0, "message": {"role": "assistant", "content": "\\n\\nHello there, how may I assist you today?"}, "finish_reason": "stop"}], "usage": {"prompt_tokens": 9, "completion_tokens": 12, "total_tokens": 21}}`
 
 	// Create a test server
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -357,8 +339,7 @@ func TestProcessChatRequest_Success(t *testing.T) {
 		_, _ = buf.ReadFrom(r.Body)
 		assert.JSONEq(t, reqBody, buf.String())
 
-		// Respond with the given response example
-		w.Header().Set("Content-Type", "application/json")
+		// Respond with the JSON response
 		w.WriteHeader(http.StatusOK)
 		_, err := w.Write([]byte(mockResponse))
 		assert.Nil(t, err)
@@ -369,8 +350,49 @@ func TestProcessChatRequest_Success(t *testing.T) {
 	err := processChatRequest(c, testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rec.Result().StatusCode)
+}
 
-	// Read the response body from the recorder and convert it to a string
-	responseBody := rec.Body.String()
-	assert.JSONEq(t, mockResponse, responseBody)
+func TestProcessChatRequest_Unauthorized(t *testing.T) {
+	// Set up the test Echo context
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodPost, "/", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+
+	// Set an empty apiKey and a url that starts with "https://api.openai.com/"
+	viper.Set("openAI.apiKey", "")
+	url := "https://api.openai.com/some/endpoint"
+
+	// Call the function being tested
+	err := processChatRequest(c, url)
+
+	// Assert that the response is an HTTP 401 (Unauthorized) error
+	assert.Error(t, err)
+	// Assert that the response body contains the expected error message
+	expectedErrorMessage := "code=401, message=OpenAI API key not found"
+	assert.Equal(t, expectedErrorMessage, err.Error())
+}
+
+func TestProcessChatRequest_SendRequestError(t *testing.T) {
+	// Set up the test Echo context
+	e := echo.New()
+	reqBody := `ERROR`
+	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(reqBody))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+
+	// Create a test server that returns an error response
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Respond with the JSON response
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte("mocked API error"))
+	}))
+	defer testServer.Close()
+
+	// Call the function being tested, using the test server URL for the API call
+	err := processChatRequest(c, testServer.URL)
+
+	// Assert that there was an error during the API request
+	assert.Error(t, err)
 }

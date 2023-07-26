@@ -4,20 +4,20 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
-	"io"
 	"net/http"
 	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
+
+	"OpenAI-api/api"
 )
 
 const (
 	CompletionUrl = "https://api.openai.com/v1/chat/completions"
 )
 
-func CreateChatCompletion(c echo.Context, url string) error {
+func CreateChatCompletion(c echo.Context) error {
 	return processChatRequest(c, CompletionUrl)
 }
 
@@ -37,7 +37,7 @@ func processChatRequest(c echo.Context, url string) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	body, err := sendRequest(nil, req)
+	body, err := api.SendRequest(nil, req)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -79,34 +79,4 @@ func makeRequest(params *RequestBody, url, apiKey string) (*http.Request, error)
 	req.Header.Set("Content-Type", "multipart/form-data")
 
 	return req, nil
-}
-
-type HttpClient interface {
-	Do(req *http.Request) (*http.Response, error)
-}
-
-func sendRequest(client HttpClient, req *http.Request) ([]byte, error) {
-	if client == nil {
-		client = http.DefaultClient
-	}
-
-	// Send the request
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() { _ = resp.Body.Close() }()
-
-	// Check if the response has a non-200 status code
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	return body, nil
 }
