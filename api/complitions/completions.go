@@ -1,57 +1,58 @@
 package complitions
 
 import (
-	"bytes"
-	"encoding/json"
-	"io/ioutil"
+	"OpenAI-api/api/model"
+	"OpenAI-api/api/request"
+	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
 )
 
-// https://platform.openai.com/docs/api-reference/completions
+const (
+	url = "https://api.openai.com/v1/completions"
+)
+
 func CreateCompletion(c echo.Context) error {
-	openAPIKey := viper.GetString("openAI.apiKey")
+	return processChatRequest(c, url)
+}
 
-	var completionReq CompletionLegacyRequest
-	err := c.Bind(&completionReq)
-	if err != nil {
-		return err
+func processChatRequest(c echo.Context, url string) error {
+	apiKey := viper.GetString("openAI.apiKey")
+	if apiKey == "" && strings.HasPrefix(url, "https://api.openai.com/") {
+		return echo.NewHTTPError(http.StatusUnauthorized, "OpenAI API key not found")
 	}
 
-	reqBody, err := json.Marshal(completionReq)
+	requestBody, err := getRequestBody(c)
 	if err != nil {
-		return err
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	url := "https://api.openai.com/v1/completions"
-
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(reqBody))
+	req, err := request.MakeRequest(requestBody, url, apiKey)
 	if err != nil {
-		return err
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	req.Header.Set("Authorization", "Bearer "+openAPIKey)
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	body, err := request.SendRequest(nil, req)
 	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	var completionResp CompletionLegacyResponse
-	err = json.Unmarshal(body, &completionResp)
-	if err != nil {
-		return err
+	return c.JSON(http.StatusOK, body)
+}
+
+func getRequestBody(c echo.Context) (*model.CompletionsRequestBody, error) {
+	requestBody := model.CompletionsRequestBody{}
+
+	if err := c.Bind(&requestBody); err != nil {
+		return nil, err
 	}
 
-	return c.JSON(http.StatusOK, completionResp)
+	if requestBody.Model == "" || requestBody.Prompt == nil {
+		return nil, errors.New("required parameters are not set (required: Model, Prompt)")
+	}
+
+	return &requestBody, nil
 }
