@@ -1,6 +1,6 @@
-package embeddings
+package model
 
-type EmbeddingsRequest struct {
+type EmbeddingsRequestBody struct {
 	Model string      `json:"model"`
 	Input interface{} `json:"input"`
 	User  string      `json:"user,omitempty"`

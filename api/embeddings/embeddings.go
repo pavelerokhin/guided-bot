@@ -1,57 +1,58 @@
 package embeddings
 
 import (
-	"bytes"
-	"encoding/json"
-	"io"
+	"OpenAI-api/api/model"
+	"OpenAI-api/api/request"
+	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
 )
 
-// https://platform.openai.com/docs/api-reference/embeddings
+const (
+	url = "https://api.openai.com/v1/embeddings"
+)
+
 func CreateEmbeddings(c echo.Context) error {
-	openAPIKey := viper.GetString("openAI.apiKey")
+	return processEmbeddingsRequest(c, url)
+}
 
-	var embeddingsReq EmbeddingsRequest
-	err := c.Bind(&embeddingsReq)
-	if err != nil {
-		return err
+func processEmbeddingsRequest(c echo.Context, url string) error {
+	apiKey := viper.GetString("openAI.apiKey")
+	if apiKey == "" && strings.HasPrefix(url, "https://api.openai.com/") {
+		return echo.NewHTTPError(http.StatusUnauthorized, "OpenAI API key not found")
 	}
 
-	reqBody, err := json.Marshal(embeddingsReq)
+	requestBody, err := getRequestBody(c)
 	if err != nil {
-		return err
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	url := "https://api.openai.com/v1/embeddings"
-
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(reqBody))
+	req, err := request.MakeRequest(requestBody, url, apiKey)
 	if err != nil {
-		return err
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	req.Header.Set("Authorization", "Bearer "+openAPIKey)
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	body, err := request.SendRequest(nil, req)
 	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	var embeddingsResp EmbeddingsResponse
-	err = json.Unmarshal(body, &embeddingsResp)
-	if err != nil {
-		return err
+	return c.JSON(http.StatusOK, body)
+}
+
+func getRequestBody(c echo.Context) (*model.EmbeddingsRequestBody, error) {
+	requestBody := model.EmbeddingsRequestBody{}
+
+	if err := c.Bind(&requestBody); err != nil {
+		return nil, err
 	}
 
-	return c.JSON(http.StatusOK, embeddingsResp)
+	if requestBody.Model == "" || requestBody.Input == nil {
+		return nil, errors.New("required parameters are not set (required: Model, Input)")
+	}
+
+	return &requestBody, nil
 }

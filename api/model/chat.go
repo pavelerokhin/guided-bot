@@ -1,8 +1,8 @@
-package chat
+package model
 
 // request
 
-type RequestBody struct {
+type ChatRequestBody struct {
 	Model            string             `json:"model"`
 	Messages         []Message          `json:"messages"`
 	Functions        []Function         `json:"functions,omitempty"`
@@ -35,7 +35,7 @@ type Function struct {
 
 // response
 
-type CompletionResponse struct {
+type ChatResponse struct {
 	ID      string     `json:"id"`
 	Object  string     `json:"object"`
 	Created int64      `json:"created"`

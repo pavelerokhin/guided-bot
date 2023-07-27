@@ -1,6 +1,8 @@
 package chat
 
 import (
+	"OpenAI-api/api/model"
+	"OpenAI-api/api/request"
 	"bytes"
 	"encoding/json"
 	"errors"
@@ -12,8 +14,6 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-
-	"OpenAI-api/api"
 )
 
 func TestGetRequestBody_ValidRequest(t *testing.T) {
@@ -85,9 +85,9 @@ func TestGetRequestBody_InvalidRequest_MissingMessages(t *testing.T) {
 
 func TestMakeRequest_ValidParams(t *testing.T) {
 	// Prepare valid parameters for the function
-	requestBody := &RequestBody{
+	requestBody := &model.ChatRequestBody{
 		Model: "some_model",
-		Messages: []Message{
+		Messages: []model.Message{
 			{
 				Role:    "user",
 				Content: "Hello, ChatGPT!",
@@ -98,7 +98,7 @@ func TestMakeRequest_ValidParams(t *testing.T) {
 	apiKey := "YOUR_API_KEY"
 
 	// Call the function
-	req, err := makeRequest(requestBody, url, apiKey)
+	req, err := request.MakeRequest(requestBody, url, apiKey)
 
 	// Assertions
 	assert.NoError(t, err)
@@ -122,9 +122,9 @@ func TestMakeRequest_ValidParams(t *testing.T) {
 
 func TestMakeRequest_NoAPIKey(t *testing.T) {
 	// Prepare valid parameters for the function but without an API key
-	requestBody := &RequestBody{
+	requestBody := &model.ChatRequestBody{
 		Model: "some_model",
-		Messages: []Message{
+		Messages: []model.Message{
 			{
 				Role:    "user",
 				Content: "Hello, ChatGPT!",
@@ -135,7 +135,7 @@ func TestMakeRequest_NoAPIKey(t *testing.T) {
 	apiKey := ""
 
 	// Call the function
-	req, err := makeRequest(requestBody, url, apiKey)
+	req, err := request.MakeRequest(requestBody, url, apiKey)
 
 	// Assertions
 	assert.NoError(t, err)
@@ -172,7 +172,7 @@ func TestSendRequest_SuccessfulResponse(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Call the function
-	response, err := api.SendRequest(nil, req)
+	response, err := request.SendRequest(nil, req)
 
 	// Assertions
 	assert.NoError(t, err)
@@ -186,7 +186,7 @@ func TestSendRequest_ErrorOnRequest(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Call the function
-	response, err := api.SendRequest(nil, req)
+	response, err := request.SendRequest(nil, req)
 
 	// Assertions
 	assert.Error(t, err)
@@ -206,7 +206,7 @@ func TestSendRequest_ErrorOnReadResponse(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Call the function
-	response, err := api.SendRequest(nil, req)
+	response, err := request.SendRequest(nil, req)
 
 	// Assertions
 	assert.Error(t, err)
@@ -247,7 +247,7 @@ func TestSendRequest_HTTPClientError(t *testing.T) {
 	mockClient := ClientMock{}
 
 	// Call the function with the custom HTTP client
-	response, err := api.SendRequest(mockClient, req)
+	response, err := request.SendRequest(mockClient, req)
 
 	// Assertions
 	assert.Error(t, err)
@@ -270,7 +270,7 @@ func TestSendRequest_ReadResponseBody(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Call the function
-	response, err := api.SendRequest(http.DefaultClient, req)
+	response, err := request.SendRequest(http.DefaultClient, req)
 
 	// Assertions
 	assert.NoError(t, err)
@@ -310,7 +310,7 @@ func TestSendRequest_ReadResponseBodyError(t *testing.T) {
 	mockClient := &MockHTTPClient{}
 
 	// Call the function with the custom HTTP client
-	response, err := api.SendRequest(mockClient, req)
+	response, err := request.SendRequest(mockClient, req)
 
 	// Assertions
 	assert.Error(t, err)

@@ -1,8 +1,6 @@
-package complitions
+package model
 
-import "OpenAI-api/api/chat"
-
-type CompletionLegacyRequest struct {
+type CompletionsRequestBody struct {
 	Model            string             `json:"model"`
 	Prompt           interface{}        `json:"prompt"`
 	Suffix           string             `json:"suffix,omitempty"`
@@ -27,7 +25,7 @@ type CompletionLegacyResponse struct {
 	Created int64              `json:"created"`
 	Model   string             `json:"model"`
 	Choices []CompletionChoice `json:"choices"`
-	Usage   chat.TokenUsage    `json:"usage"`
+	Usage   TokenUsage         `json:"usage"`
 }
 
 type CompletionChoice struct {
