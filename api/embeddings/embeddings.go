@@ -1,21 +1,22 @@
 package embeddings
 
 import (
-	"OpenAI-api/api/model"
-	"OpenAI-api/api/request"
 	"errors"
 	"net/http"
 	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
+
+	"OpenAI-api/api/model"
+	"OpenAI-api/api/request"
 )
 
 const (
 	url = "https://api.openai.com/v1/embeddings"
 )
 
-func CreateEmbeddings(c echo.Context) error {
+func Handle(c echo.Context) error {
 	return processEmbeddingsRequest(c, url)
 }
 
@@ -43,15 +44,15 @@ func processEmbeddingsRequest(c echo.Context, url string) error {
 	return c.JSON(http.StatusOK, body)
 }
 
-func getRequestBody(c echo.Context) (*model.EmbeddingsRequestBody, error) {
-	requestBody := model.EmbeddingsRequestBody{}
+func getRequestBody(c echo.Context) (*model.CompletionsRequestBody, error) {
+	requestBody := model.CompletionsRequestBody{}
 
 	if err := c.Bind(&requestBody); err != nil {
 		return nil, err
 	}
 
-	if requestBody.Model == "" || requestBody.Input == nil {
-		return nil, errors.New("required parameters are not set (required: Model, Input)")
+	if requestBody.Model == "" || requestBody.Prompt == nil {
+		return nil, errors.New("required parameters are not set (required: Model, Prompt)")
 	}
 
 	return &requestBody, nil

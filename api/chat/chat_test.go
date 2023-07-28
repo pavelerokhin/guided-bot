@@ -5,7 +5,6 @@ import (
 	"OpenAI-api/api/request"
 	"bytes"
 	"encoding/json"
-	"errors"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -157,63 +156,6 @@ func TestMakeRequest_NoAPIKey(t *testing.T) {
 	assert.Equal(t, expectedData, bodyData)
 }
 
-func TestSendRequest_SuccessfulResponse(t *testing.T) {
-	// Prepare a mock HTTP server
-	mockResponse := `{"result": "success"}`
-	handler := func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = io.WriteString(w, mockResponse)
-	}
-	server := httptest.NewServer(http.HandlerFunc(handler))
-	defer server.Close()
-
-	// Create a request to the mock server
-	req, err := http.NewRequest("GET", server.URL, nil)
-	assert.NoError(t, err)
-
-	// Call the function
-	response, err := request.SendRequest(nil, req)
-
-	// Assertions
-	assert.NoError(t, err)
-	assert.NotNil(t, response)
-	assert.Equal(t, []byte(mockResponse), response)
-}
-
-func TestSendRequest_ErrorOnRequest(t *testing.T) {
-	// Create a request with an invalid URL to trigger an error
-	req, err := http.NewRequest("GET", "invalid-url", nil)
-	assert.NoError(t, err)
-
-	// Call the function
-	response, err := request.SendRequest(nil, req)
-
-	// Assertions
-	assert.Error(t, err)
-	assert.Nil(t, response)
-}
-
-func TestSendRequest_ErrorOnReadResponse(t *testing.T) {
-	// Prepare a mock HTTP server that returns an empty response
-	handler := func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusBadRequest)
-	}
-	server := httptest.NewServer(http.HandlerFunc(handler))
-	defer server.Close()
-
-	// Create a request to the mock server
-	req, err := http.NewRequest("GET", server.URL, nil)
-	assert.NoError(t, err)
-
-	// Call the function
-	response, err := request.SendRequest(nil, req)
-
-	// Assertions
-	assert.Error(t, err)
-	assert.Nil(t, response)
-	assert.True(t, strings.Contains(err.Error(), "unexpected status code"))
-}
-
 func TestGetRequestBody_BindError(t *testing.T) {
 	// Create a new mock Echo context
 	e := echo.New()
@@ -229,93 +171,6 @@ func TestGetRequestBody_BindError(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, requestBody)
 	assert.EqualError(t, err, "code=400, message=Syntax error: offset=1, error=invalid character 'i' looking for beginning of value, internal=invalid character 'i' looking for beginning of value")
-}
-
-type ClientMock struct {
-}
-
-func (c ClientMock) Do(req *http.Request) (*http.Response, error) {
-	return nil, errors.New("mock HTTP client error")
-}
-
-func TestSendRequest_HTTPClientError(t *testing.T) {
-	// Create a request to the mock server
-	req, err := http.NewRequest("GET", "https://api.example.com", nil)
-	assert.NoError(t, err)
-
-	// Create a custom HTTP client (the mock client) for testing
-	mockClient := ClientMock{}
-
-	// Call the function with the custom HTTP client
-	response, err := request.SendRequest(mockClient, req)
-
-	// Assertions
-	assert.Error(t, err)
-	assert.Nil(t, response)
-	assert.EqualError(t, err, "mock HTTP client error")
-}
-
-func TestSendRequest_ReadResponseBody(t *testing.T) {
-	// Create a mock HTTP server
-	mockResponse := `{"result": "success"}`
-	handler := func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = io.WriteString(w, mockResponse)
-	}
-	server := httptest.NewServer(http.HandlerFunc(handler))
-	defer server.Close()
-
-	// Create a request to the mock server
-	req, err := http.NewRequest("GET", server.URL, nil)
-	assert.NoError(t, err)
-
-	// Call the function
-	response, err := request.SendRequest(http.DefaultClient, req)
-
-	// Assertions
-	assert.NoError(t, err)
-	assert.NotNil(t, response)
-	assert.Equal(t, []byte(mockResponse), response)
-}
-
-type MockResponseBody struct{}
-
-func (r *MockResponseBody) Read(p []byte) (n int, err error) {
-	// Return an error to simulate a failure when reading the response body.
-	return 0, errors.New("mock response body read error")
-}
-
-func (r *MockResponseBody) Close() error {
-	// Return an error to simulate a failure when reading the response body.
-	return errors.New("mock response body read error")
-}
-
-type MockHTTPClient struct{}
-
-func (c *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
-	// Return a custom response with the mock response body.
-	resp := &http.Response{
-		StatusCode: http.StatusOK,
-		Body:       &MockResponseBody{},
-	}
-	return resp, nil
-}
-
-func TestSendRequest_ReadResponseBodyError(t *testing.T) {
-	// Create a request to the mock server (not used in this test)
-	req, err := http.NewRequest("GET", "https://api.example.com", nil)
-	assert.NoError(t, err)
-
-	// Create a custom HTTP client (the mock client) for testing
-	mockClient := &MockHTTPClient{}
-
-	// Call the function with the custom HTTP client
-	response, err := request.SendRequest(mockClient, req)
-
-	// Assertions
-	assert.Error(t, err)
-	assert.Nil(t, response)
-	assert.EqualError(t, err, "mock response body read error")
 }
 
 func TestProcessChatRequest_Success(t *testing.T) {

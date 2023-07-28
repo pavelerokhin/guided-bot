@@ -1,4 +1,4 @@
-package complitions
+package completions
 
 import (
 	"OpenAI-api/api/model"
@@ -15,7 +15,7 @@ const (
 	url = "https://api.openai.com/v1/completions"
 )
 
-func CreateCompletion(c echo.Context) error {
+func Handle(c echo.Context) error {
 	return processChatRequest(c, url)
 }
 
