@@ -16,7 +16,7 @@ const (
 	url = "https://api.openai.com/v1/chat/completions"
 )
 
-func CreateChatCompletion(c echo.Context) error {
+func Handle(c echo.Context) error {
 	return processChatRequest(c, url)
 }
 
