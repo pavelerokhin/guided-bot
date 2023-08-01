@@ -1,14 +1,10 @@
 package completions
 
 import (
-	"OpenAI-api/api/model"
-	"OpenAI-api/api/request"
 	"bytes"
-	"encoding/json"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -19,10 +15,7 @@ func TestGetRequestBody_ValidRequest(t *testing.T) {
 	// Prepare a valid request body
 	jsonStr := `{
 		"model": "some_model",
-		"messages": [{
-			"role": "user",
-			"content": "Hello, ChatGPT!"
-		}]
+		"prompt": "prompt"
 	}`
 	req := httptest.NewRequest("POST", "/some-endpoint", strings.NewReader(jsonStr))
 	req.Header.Set("Content-Type", "application/json")
@@ -36,7 +29,7 @@ func TestGetRequestBody_ValidRequest(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, requestBody)
 	assert.Equal(t, "some_model", requestBody.Model)
-	assert.Len(t, requestBody.Prompt, 1)
+	assert.Equal(t, "prompt", requestBody.Prompt)
 }
 
 func TestGetRequestBody_InvalidRequest_MissingModel(t *testing.T) {
@@ -58,7 +51,7 @@ func TestGetRequestBody_InvalidRequest_MissingModel(t *testing.T) {
 	// Assertions
 	assert.Error(t, err)
 	assert.Nil(t, requestBody)
-	assert.EqualError(t, err, "required parameters are not set (required: Model, Messages)")
+	assert.EqualError(t, err, "required parameters are not set (required: Model, Prompt)")
 }
 
 func TestGetRequestBody_InvalidRequest_MissingMessages(t *testing.T) {
@@ -77,81 +70,7 @@ func TestGetRequestBody_InvalidRequest_MissingMessages(t *testing.T) {
 	// Assertions
 	assert.Error(t, err)
 	assert.Nil(t, requestBody)
-	assert.EqualError(t, err, "required parameters are not set (required: Model, Messages)")
-}
-
-func TestMakeRequest_ValidParams(t *testing.T) {
-	// Prepare valid parameters for the function
-	requestBody := &model.ChatRequestBody{
-		Model: "some_model",
-		Messages: []model.Message{
-			{
-				Role:    "user",
-				Content: "Hello, ChatGPT!",
-			},
-		},
-	}
-	url := "https://api.example.com/chat"
-	apiKey := "YOUR_API_KEY"
-
-	// Call the function
-	req, err := request.MakeRequest(requestBody, url, apiKey)
-
-	// Assertions
-	assert.NoError(t, err)
-	assert.NotNil(t, req)
-	assert.Equal(t, "POST", req.Method)
-	assert.Equal(t, url, req.URL.String())
-
-	// Check the authorization header
-	assert.Equal(t, "Bearer "+apiKey, req.Header.Get("Authorization"))
-
-	// Check the content type header
-	assert.Equal(t, "multipart/form-data", req.Header.Get("Content-Type"))
-
-	// Check the request body data
-	expectedData, _ := json.Marshal(requestBody)
-	// Read the request body and compare its contents to the expectedData
-	bodyData, err := io.ReadAll(req.Body)
-	assert.NoError(t, err)
-	assert.Equal(t, expectedData, bodyData)
-}
-
-func TestMakeRequest_NoAPIKey(t *testing.T) {
-	// Prepare valid parameters for the function but without an API key
-	requestBody := &model.ChatRequestBody{
-		Model: "some_model",
-		Messages: []model.Message{
-			{
-				Role:    "user",
-				Content: "Hello, ChatGPT!",
-			},
-		},
-	}
-	url := "https://api.example.com/chat"
-	apiKey := ""
-
-	// Call the function
-	req, err := request.MakeRequest(requestBody, url, apiKey)
-
-	// Assertions
-	assert.NoError(t, err)
-	assert.NotNil(t, req)
-	assert.Equal(t, "POST", req.Method)
-	assert.Equal(t, url, req.URL.String())
-
-	// Check that there is no authorization header
-	assert.Empty(t, req.Header.Get("Authorization"))
-
-	// Check the content type header
-	assert.Equal(t, "multipart/form-data", req.Header.Get("Content-Type"))
-
-	// Check the request body data
-	expectedData, _ := json.Marshal(requestBody)
-	// Read the request body and compare its contents to the expectedData
-	bodyData, err := io.ReadAll(req.Body)
-	assert.NoError(t, err)
-	assert.Equal(t, expectedData, bodyData)
+	assert.EqualError(t, err, "required parameters are not set (required: Model, Prompt)")
 }
 
 func TestGetRequestBody_BindError(t *testing.T) {
@@ -174,7 +93,7 @@ func TestGetRequestBody_BindError(t *testing.T) {
 func TestProcessChatRequest_Success(t *testing.T) {
 	// Create a new mock Echo context
 	e := echo.New()
-	reqBody := `{"model": "gpt-3.5-turbo", "messages": [{"role": "system", "content": "You are a helpful assistant."}, {"role": "user", "content": "Hello!"}]}`
+	reqBody := `{"model": "gpt-3.5-turbo", "prompt": "Hello, ChatGPT!"}`
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(reqBody))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
@@ -200,7 +119,7 @@ func TestProcessChatRequest_Success(t *testing.T) {
 	defer testServer.Close()
 
 	// Use the test server URL in the test case
-	err := processChatRequest(c, testServer.URL)
+	err := processCompletionsRequest(c, testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rec.Result().StatusCode)
 }
@@ -217,7 +136,7 @@ func TestProcessChatRequest_Unauthorized(t *testing.T) {
 	url := "https://api.openai.com/some/endpoint"
 
 	// Call the function being tested
-	err := processChatRequest(c, url)
+	err := processCompletionsRequest(c, url)
 
 	// Assert that the response is an HTTP 401 (Unauthorized) error
 	assert.Error(t, err)
@@ -244,7 +163,7 @@ func TestProcessChatRequest_SendRequestError(t *testing.T) {
 	defer testServer.Close()
 
 	// Call the function being tested, using the test server URL for the API call
-	err := processChatRequest(c, testServer.URL)
+	err := processCompletionsRequest(c, testServer.URL)
 
 	// Assert that there was an error during the API request
 	assert.Error(t, err)

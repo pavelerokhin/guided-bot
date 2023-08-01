@@ -27,7 +27,7 @@ func HandleEdit(c echo.Context) error {
 }
 
 func HandleVariate(c echo.Context) error {
-	return processImageVariate(c, urlVariate)
+	return processImageVariation(c, urlVariate)
 }
 
 func processImageCreate(c echo.Context, url string) error {
@@ -106,7 +106,7 @@ func getEditRequestBody(c echo.Context) (*model.ImageEditRequestBody, error) {
 	return &requestBody, nil
 }
 
-func processImageVariate(c echo.Context, url string) error {
+func processImageVariation(c echo.Context, url string) error {
 	apiKey := viper.GetString("openAI.apiKey")
 	if apiKey == "" && strings.HasPrefix(url, "https://api.openai.com/") {
 		return echo.NewHTTPError(http.StatusUnauthorized, "OpenAI API key not found")

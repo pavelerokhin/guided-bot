@@ -16,10 +16,10 @@ const (
 )
 
 func Handle(c echo.Context) error {
-	return processChatRequest(c, url)
+	return processCompletionsRequest(c, url)
 }
 
-func processChatRequest(c echo.Context, url string) error {
+func processCompletionsRequest(c echo.Context, url string) error {
 	apiKey := viper.GetString("openAI.apiKey")
 	if apiKey == "" && strings.HasPrefix(url, "https://api.openai.com/") {
 		return echo.NewHTTPError(http.StatusUnauthorized, "OpenAI API key not found")
