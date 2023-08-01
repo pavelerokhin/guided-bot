@@ -4,6 +4,7 @@ import (
 	"OpenAI-api/api/chat"
 	"OpenAI-api/api/completions"
 	"OpenAI-api/api/embeddings"
+	"OpenAI-api/api/images"
 	"fmt"
 	"github.com/spf13/viper"
 	"os"
@@ -45,6 +46,14 @@ func main() {
 	// embeddings
 	e.POST("/v1/embeddings", embeddings.Handle)
 	e.POST("/embeddings", embeddings.Handle)
+
+	// images
+	e.POST("/v1/images/generations", images.HandleCreate)
+	e.POST("/images/generations", images.HandleCreate)
+	e.POST("/v1/images/edits", images.HandleEdit)
+	e.POST("/images/edits", images.HandleEdit)
+	e.POST("/v1/images/variations", images.HandleVariate)
+	e.POST("/images/variations", images.HandleVariate)
 
 	// Start the server
 	e.Logger.Fatal(e.Start(":8080"))
