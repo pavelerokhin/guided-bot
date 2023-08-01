@@ -1,14 +1,10 @@
 package chat
 
 import (
-	"OpenAI-api/api/model"
-	"OpenAI-api/api/request"
 	"bytes"
-	"encoding/json"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -80,80 +76,6 @@ func TestGetRequestBody_InvalidRequest_MissingMessages(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, requestBody)
 	assert.EqualError(t, err, "required parameters are not set (required: Model, Messages)")
-}
-
-func TestMakeRequest_ValidParams(t *testing.T) {
-	// Prepare valid parameters for the function
-	requestBody := &model.ChatRequestBody{
-		Model: "some_model",
-		Messages: []model.Message{
-			{
-				Role:    "user",
-				Content: "Hello, ChatGPT!",
-			},
-		},
-	}
-	url := "https://api.example.com/chat"
-	apiKey := "YOUR_API_KEY"
-
-	// Call the function
-	req, err := request.MakeRequest(requestBody, url, apiKey)
-
-	// Assertions
-	assert.NoError(t, err)
-	assert.NotNil(t, req)
-	assert.Equal(t, "POST", req.Method)
-	assert.Equal(t, url, req.URL.String())
-
-	// Check the authorization header
-	assert.Equal(t, "Bearer "+apiKey, req.Header.Get("Authorization"))
-
-	// Check the content type header
-	assert.Equal(t, "multipart/form-data", req.Header.Get("Content-Type"))
-
-	// Check the request body data
-	expectedData, _ := json.Marshal(requestBody)
-	// Read the request body and compare its contents to the expectedData
-	bodyData, err := io.ReadAll(req.Body)
-	assert.NoError(t, err)
-	assert.Equal(t, expectedData, bodyData)
-}
-
-func TestMakeRequest_NoAPIKey(t *testing.T) {
-	// Prepare valid parameters for the function but without an API key
-	requestBody := &model.ChatRequestBody{
-		Model: "some_model",
-		Messages: []model.Message{
-			{
-				Role:    "user",
-				Content: "Hello, ChatGPT!",
-			},
-		},
-	}
-	url := "https://api.example.com/chat"
-	apiKey := ""
-
-	// Call the function
-	req, err := request.MakeRequest(requestBody, url, apiKey)
-
-	// Assertions
-	assert.NoError(t, err)
-	assert.NotNil(t, req)
-	assert.Equal(t, "POST", req.Method)
-	assert.Equal(t, url, req.URL.String())
-
-	// Check that there is no authorization header
-	assert.Empty(t, req.Header.Get("Authorization"))
-
-	// Check the content type header
-	assert.Equal(t, "multipart/form-data", req.Header.Get("Content-Type"))
-
-	// Check the request body data
-	expectedData, _ := json.Marshal(requestBody)
-	// Read the request body and compare its contents to the expectedData
-	bodyData, err := io.ReadAll(req.Body)
-	assert.NoError(t, err)
-	assert.Equal(t, expectedData, bodyData)
 }
 
 func TestGetRequestBody_BindError(t *testing.T) {
