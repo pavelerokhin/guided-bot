@@ -1,5 +1,5 @@
 package model
 
 type RequestBody interface {
-	ChatRequestBody | CompletionsRequestBody | EmbeddingsRequestBody
+	ChatRequestBody | CompletionsRequestBody | EmbeddingsRequestBody | ImageCreateRequestBody | ImageEditRequestBody | ImageVariateRequestBody
 }

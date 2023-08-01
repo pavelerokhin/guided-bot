@@ -1,4 +1,4 @@
-package completions
+package images
 
 import (
 	"OpenAI-api/api/model"
@@ -36,7 +36,9 @@ func TestGetRequestBody_ValidRequest(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, requestBody)
 	assert.Equal(t, "some_model", requestBody.Model)
-	assert.Len(t, requestBody.Prompt, 1)
+	assert.Len(t, requestBody.Messages, 1)
+	assert.Equal(t, "user", requestBody.Messages[0].Role)
+	assert.Equal(t, "Hello, ChatGPT!", requestBody.Messages[0].Content)
 }
 
 func TestGetRequestBody_InvalidRequest_MissingModel(t *testing.T) {
