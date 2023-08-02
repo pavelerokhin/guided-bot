@@ -3,16 +3,10 @@ package request
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
-	"io"
 	"net/http"
 
 	"OpenAI-api/api/model"
 )
-
-type HttpClient interface {
-	Do(req *http.Request) (*http.Response, error)
-}
 
 func MakeRequest[T model.RequestBody](params *T, url, apiKey string) (*http.Request, error) {
 	// Convert the fields to JSON format
@@ -34,30 +28,4 @@ func MakeRequest[T model.RequestBody](params *T, url, apiKey string) (*http.Requ
 	req.Header.Set("Content-Type", "multipart/form-data")
 
 	return req, nil
-}
-
-func SendRequest(client HttpClient, req *http.Request) ([]byte, error) {
-	if client == nil {
-		client = http.DefaultClient
-	}
-
-	// Send the request
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() { _ = resp.Body.Close() }()
-
-	// Check if the response has a non-200 status code
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	return body, nil
 }
