@@ -1,0 +1,28 @@
+states:
+  -
+    id: 0
+    before: "print({header})"
+    text: "Hello, I'm a bot."
+    next:
+      right: 1
+  -
+    id: 1
+    text: "What is your name?"
+    input: "name"
+    next:
+      right: 2
+      right-if: "isEmpty({name})"
+      left: 1
+  -
+    id: 2
+    text: "How can I help you, {name}?"
+    input:  "prompt"
+    after: "printPrompt({prompt})"
+    next:
+      right: 999
+      right-if: "contains({prompt}, 'bye')"
+      left: 2
+  -
+    id: 999
+    text: "Thank you, good bye!"
+

@@ -1,10 +1,7 @@
 package main
 
 import (
-	"OpenAI-api/api/chat"
-	"OpenAI-api/api/completions"
-	"OpenAI-api/api/embeddings"
-	"OpenAI-api/api/images"
+	"OpenAI-api/api"
 	"fmt"
 	"github.com/spf13/viper"
 	"os"
@@ -37,23 +34,24 @@ func main() {
 
 	// Routes
 	// chat
-	e.POST("/chat/completions", chat.Handle)
+	e.POST("/v1/chat/completions", api.HandleChat)
+	e.POST("/chat/completions", api.HandleChat)
 
 	// completions
-	e.POST("/v1/completions", completions.Handle)
-	e.POST("/completions", completions.Handle)
+	e.POST("/v1/completions", api.HandleCompletions)
+	e.POST("/completions", api.HandleCompletions)
 
 	// embeddings
-	e.POST("/v1/embeddings", embeddings.Handle)
-	e.POST("/embeddings", embeddings.Handle)
+	e.POST("/v1/embeddings", api.HandleEmbeddings)
+	e.POST("/embeddings", api.HandleEmbeddings)
 
 	// images
-	e.POST("/v1/images/generations", images.HandleCreate)
-	e.POST("/images/generations", images.HandleCreate)
-	e.POST("/v1/images/edits", images.HandleEdit)
-	e.POST("/images/edits", images.HandleEdit)
-	e.POST("/v1/images/variations", images.HandleVariate)
-	e.POST("/images/variations", images.HandleVariate)
+	e.POST("/v1/images/generations", api.HandleImageCreate)
+	e.POST("/images/generations", api.HandleImageCreate)
+	e.POST("/v1/images/edits", api.HandleImageEdit)
+	e.POST("/images/edits", api.HandleImageEdit)
+	e.POST("/v1/images/variations", api.HandleImageVariate)
+	e.POST("/images/variations", api.HandleImageVariate)
 
 	// Start the server
 	e.Logger.Fatal(e.Start(":8080"))

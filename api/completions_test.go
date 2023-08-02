@@ -1,4 +1,4 @@
-package completions
+package api
 
 import (
 	"bytes"
@@ -11,86 +11,7 @@ import (
 	"testing"
 )
 
-func TestGetRequestBody_ValidRequest(t *testing.T) {
-	// Prepare a valid request body
-	jsonStr := `{
-		"model": "some_model",
-		"prompt": "prompt"
-	}`
-	req := httptest.NewRequest("POST", "/some-endpoint", strings.NewReader(jsonStr))
-	req.Header.Set("Content-Type", "application/json")
-	rec := httptest.NewRecorder()
-	c := echo.New().NewContext(req, rec)
-
-	// Call the function
-	requestBody, err := getRequestBody(c)
-
-	// Assertions
-	assert.NoError(t, err)
-	assert.NotNil(t, requestBody)
-	assert.Equal(t, "some_model", requestBody.Model)
-	assert.Equal(t, "prompt", requestBody.Prompt)
-}
-
-func TestGetRequestBody_InvalidRequest_MissingModel(t *testing.T) {
-	// Prepare an invalid request body without the required "model" field
-	jsonStr := `{
-		"messages": [{
-			"role": "user",
-			"content": "Hello, ChatGPT!"
-		}]
-	}`
-	req := httptest.NewRequest("POST", "/some-endpoint", strings.NewReader(jsonStr))
-	req.Header.Set("Content-Type", "application/json")
-	rec := httptest.NewRecorder()
-	c := echo.New().NewContext(req, rec)
-
-	// Call the function
-	requestBody, err := getRequestBody(c)
-
-	// Assertions
-	assert.Error(t, err)
-	assert.Nil(t, requestBody)
-	assert.EqualError(t, err, "required parameters are not set (required: Model, Prompt)")
-}
-
-func TestGetRequestBody_InvalidRequest_MissingMessages(t *testing.T) {
-	// Prepare an invalid request body without the required "messages" field
-	jsonStr := `{
-		"model": "some_model"
-	}`
-	req := httptest.NewRequest("POST", "/some-endpoint", strings.NewReader(jsonStr))
-	req.Header.Set("Content-Type", "application/json")
-	rec := httptest.NewRecorder()
-	c := echo.New().NewContext(req, rec)
-
-	// Call the function
-	requestBody, err := getRequestBody(c)
-
-	// Assertions
-	assert.Error(t, err)
-	assert.Nil(t, requestBody)
-	assert.EqualError(t, err, "required parameters are not set (required: Model, Prompt)")
-}
-
-func TestGetRequestBody_BindError(t *testing.T) {
-	// Create a new mock Echo context
-	e := echo.New()
-	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`invalid request body`))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
-
-	// Call the function with the mock context
-	requestBody, err := getRequestBody(c)
-
-	// Assertions
-	assert.Error(t, err)
-	assert.Nil(t, requestBody)
-	assert.EqualError(t, err, "code=400, message=Syntax error: offset=1, error=invalid character 'i' looking for beginning of value, internal=invalid character 'i' looking for beginning of value")
-}
-
-func TestProcessChatRequest_Success(t *testing.T) {
+func TestProcessCompletionsRequest_Success(t *testing.T) {
 	// Create a new mock Echo context
 	e := echo.New()
 	reqBody := `{"model": "gpt-3.5-turbo", "prompt": "Hello, ChatGPT!"}`
@@ -124,7 +45,7 @@ func TestProcessChatRequest_Success(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rec.Result().StatusCode)
 }
 
-func TestProcessChatRequest_Unauthorized(t *testing.T) {
+func TestProcessCompletionsRequest_Unauthorized(t *testing.T) {
 	// Set up the test Echo context
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
@@ -145,7 +66,7 @@ func TestProcessChatRequest_Unauthorized(t *testing.T) {
 	assert.Equal(t, expectedErrorMessage, err.Error())
 }
 
-func TestProcessChatRequest_SendRequestError(t *testing.T) {
+func TestProcessCompletionsRequest_SendRequestError(t *testing.T) {
 	// Set up the test Echo context
 	e := echo.New()
 	reqBody := `ERROR`

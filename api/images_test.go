@@ -1,6 +1,7 @@
-package images
+package api
 
 import (
+	"OpenAI-api/api/request"
 	"bytes"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
@@ -22,7 +23,7 @@ func TestCreateGetRequestBody_ValidRequest(t *testing.T) {
 	c := echo.New().NewContext(req, rec)
 
 	// Call the function
-	requestBody, err := getCreateRequestBody(c)
+	requestBody, err := request.GetImageCreateRequestBody(c)
 
 	// Assertions
 	assert.NoError(t, err)
@@ -40,7 +41,7 @@ func TestCreateGetRequestBody_InvalidRequest_MissingModel(t *testing.T) {
 	c := echo.New().NewContext(req, rec)
 
 	// Call the function
-	requestBody, err := getCreateRequestBody(c)
+	requestBody, err := request.GetImageCreateRequestBody(c)
 
 	// Assertions
 	assert.Error(t, err)
@@ -57,7 +58,7 @@ func TestCreateGetRequestBody_BindError(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	// Call the function with the mock context
-	requestBody, err := getCreateRequestBody(c)
+	requestBody, err := request.GetImageCreateRequestBody(c)
 
 	// Assertions
 	assert.Error(t, err)
@@ -156,7 +157,7 @@ func TestEditGetRequestBody_ValidRequest(t *testing.T) {
 	c := echo.New().NewContext(req, rec)
 
 	// Call the function
-	requestBody, err := getEditRequestBody(c)
+	requestBody, err := request.GetImageEditRequestBody(c)
 
 	// Assertions
 	assert.NoError(t, err)
@@ -175,7 +176,7 @@ func TestEditGetRequestBody_InvalidRequest_MissingImage(t *testing.T) {
 	c := echo.New().NewContext(req, rec)
 
 	// Call the function
-	requestBody, err := getEditRequestBody(c)
+	requestBody, err := request.GetImageEditRequestBody(c)
 
 	// Assertions
 	assert.Error(t, err)
@@ -192,7 +193,7 @@ func TestEditGetRequestBody_BindError(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	// Call the function with the mock context
-	requestBody, err := getEditRequestBody(c)
+	requestBody, err := request.GetImageEditRequestBody(c)
 
 	// Assertions
 	assert.Error(t, err)
@@ -291,7 +292,7 @@ func TestVariationGetRequestBody_ValidRequest(t *testing.T) {
 	c := echo.New().NewContext(req, rec)
 
 	// Call the function
-	requestBody, err := getVariationRequestBody(c)
+	requestBody, err := request.GetImageVariationRequestBody(c)
 
 	// Assertions
 	assert.NoError(t, err)
@@ -310,7 +311,7 @@ func TestVariationGetRequestBody_InvalidRequest_MissingImage(t *testing.T) {
 	c := echo.New().NewContext(req, rec)
 
 	// Call the function
-	requestBody, err := getVariationRequestBody(c)
+	requestBody, err := request.GetImageVariationRequestBody(c)
 
 	// Assertions
 	assert.Error(t, err)
@@ -327,7 +328,7 @@ func TestVariationGetRequestBody_BindError(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	// Call the function with the mock context
-	requestBody, err := getVariationRequestBody(c)
+	requestBody, err := request.GetImageVariationRequestBody(c)
 
 	// Assertions
 	assert.Error(t, err)
