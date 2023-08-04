@@ -2,13 +2,14 @@ package api
 
 import (
 	"bytes"
-	"github.com/labstack/echo/v4"
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/labstack/echo/v4"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestProcessCompletionsRequest_Success(t *testing.T) {

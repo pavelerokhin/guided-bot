@@ -3,7 +3,7 @@ package model
 type ImageCreateRequestBody struct {
 	Prompt         string `json:"prompt"`
 	N              int64  `json:"n,omitempty"`               // default 1
-	Size           string `json:"string,omitempty"`          // default 1024x1024
+	Size           string `json:"size,omitempty"`            // default 1024x1024
 	ResponseFormat string `json:"response_format,omitempty"` // default "url"
 	User           string `json:"user,omitempty"`
 }
@@ -24,4 +24,12 @@ type ImageVariateRequestBody struct {
 	Size           string `json:"string,omitempty"`          // default 1024x1024
 	ResponseFormat string `json:"response_format,omitempty"` // default "url"
 	User           string `json:"user,omitempty"`
+}
+
+type ImageResponse struct {
+	Created int `json:"created"`
+	Data    []struct {
+		Url     string `json:"url"`
+		B64Json string `json:"b64_json"`
+	} `json:"data"`
 }

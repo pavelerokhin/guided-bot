@@ -1,16 +1,16 @@
 package api
 
 import (
-	"OpenAI-api/api/request"
-	"github.com/labstack/echo/v4"
-	"github.com/spf13/viper"
 	"net/http"
-	"strings"
+
+	"github.com/labstack/echo/v4"
+
+	"OpenAI-api/api/request"
 )
 
 const (
 	urlChat         = "https://api.openai.com/v1/chat/completions"
-	urlCompletions  = "https://api.openai.com/v1/completions"
+	urlCompletions  = "https://api.openai.com/v1/chat/completions"
 	urlEmbeddings   = "https://api.openai.com/v1/embeddings"
 	urlImageCreate  = "https://api.openai.com/v1/images/generations"
 	urlImageEdit    = "https://api.openai.com/v1/images/edits"
@@ -42,22 +42,12 @@ func HandleImageVariate(c echo.Context) error {
 }
 
 func processChatRequest(c echo.Context, url string) error {
-	apiKey := viper.GetString("openAI.apiKey")
-	if apiKey == "" && strings.HasPrefix(url, "https://api.openai.com/") {
-		return echo.NewHTTPError(http.StatusUnauthorized, "OpenAI API key not found")
-	}
-
 	requestBody, err := request.GetChatRequestBody(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	req, err := request.MakeRequest(requestBody, url, apiKey)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-
-	body, err := request.SendRequest(nil, req)
+	body, err := request.ProcessRequest(url, requestBody)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -66,22 +56,12 @@ func processChatRequest(c echo.Context, url string) error {
 }
 
 func processCompletionsRequest(c echo.Context, url string) error {
-	apiKey := viper.GetString("openAI.apiKey")
-	if apiKey == "" && strings.HasPrefix(url, "https://api.openai.com/") {
-		return echo.NewHTTPError(http.StatusUnauthorized, "OpenAI API key not found")
-	}
-
 	requestBody, err := request.GetCompletionsRequestBody(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	req, err := request.MakeRequest(requestBody, url, apiKey)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-
-	body, err := request.SendRequest(nil, req)
+	body, err := request.ProcessRequest(url, requestBody)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -90,22 +70,12 @@ func processCompletionsRequest(c echo.Context, url string) error {
 }
 
 func processEmbeddingsRequest(c echo.Context, url string) error {
-	apiKey := viper.GetString("openAI.apiKey")
-	if apiKey == "" && strings.HasPrefix(url, "https://api.openai.com/") {
-		return echo.NewHTTPError(http.StatusUnauthorized, "OpenAI API key not found")
-	}
-
 	requestBody, err := request.GetEmbeddingsRequestBody(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	req, err := request.MakeRequest(requestBody, url, apiKey)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-
-	body, err := request.SendRequest(nil, req)
+	body, err := request.ProcessRequest(url, requestBody)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -114,22 +84,12 @@ func processEmbeddingsRequest(c echo.Context, url string) error {
 }
 
 func processImageCreate(c echo.Context, url string) error {
-	apiKey := viper.GetString("openAI.apiKey")
-	if apiKey == "" && strings.HasPrefix(url, "https://api.openai.com/") {
-		return echo.NewHTTPError(http.StatusUnauthorized, "OpenAI API key not found")
-	}
-
 	requestBody, err := request.GetImageCreateRequestBody(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	req, err := request.MakeRequest(requestBody, url, apiKey)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-
-	body, err := request.SendRequest(nil, req)
+	body, err := request.ProcessRequest(url, requestBody)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -138,22 +98,12 @@ func processImageCreate(c echo.Context, url string) error {
 }
 
 func processImageEdit(c echo.Context, url string) error {
-	apiKey := viper.GetString("openAI.apiKey")
-	if apiKey == "" && strings.HasPrefix(url, "https://api.openai.com/") {
-		return echo.NewHTTPError(http.StatusUnauthorized, "OpenAI API key not found")
-	}
-
 	requestBody, err := request.GetImageEditRequestBody(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	req, err := request.MakeRequest(requestBody, url, apiKey)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-
-	body, err := request.SendRequest(nil, req)
+	body, err := request.ProcessRequest(url, requestBody)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -162,22 +112,12 @@ func processImageEdit(c echo.Context, url string) error {
 }
 
 func processImageVariation(c echo.Context, url string) error {
-	apiKey := viper.GetString("openAI.apiKey")
-	if apiKey == "" && strings.HasPrefix(url, "https://api.openai.com/") {
-		return echo.NewHTTPError(http.StatusUnauthorized, "OpenAI API key not found")
-	}
-
 	requestBody, err := request.GetImageVariationRequestBody(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	req, err := request.MakeRequest(requestBody, url, apiKey)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-
-	body, err := request.SendRequest(nil, req)
+	body, err := request.ProcessRequest(url, requestBody)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}

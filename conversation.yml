@@ -4,24 +4,60 @@ states:
     before: "print({header})"
     text: "Hello, I'm a bot."
     next:
-      right: 1
+      right: 20
   -
-    id: 1
+    id: 10
     text: "What is your name?"
     input: "name"
     next:
-      right: 2
+      right: 10
       right-if: "isEmpty({name})"
-      left: 1
+      left: 20
   -
-    id: 2
-    text: "How can I help you, {name}?"
-    input:  "prompt"
-    after: "printPrompt({prompt})"
+    id: 20
+    text: "How can you describe your perfect kitchen, {name}?"
+    input:  "prompt_kitchen"
+    after: "imageKitchen({prompt_kitchen})"
+    next:
+      right: 25
+  - id: 25
+    text: "How can you edit the sketch of the kitchen?"
+    input: "prompt_kitchen_edit"
+    after: "editKitchen({prompt_kitchen_edit})"
+    next:
+      right: 30
+      right-if: "isEmpty({prompt_kitchen_edit})"
+      left: 25
+  -
+    id: 30
+    text: "How can you describe your perfect living room, {name}?"
+    input: "prompt_living_room"
+    after: "imageLivingRoom({prompt_living_room})"
+    next:
+      right: 35
+  - id: 35
+    text: "How can you the sketch of the living room?"
+    input: "prompt_living_room_edit"
+    after: "editLivingRoom({prompt_living_room_edit})"
+    next:
+      right: 40
+      right-if: "isEmpty({prompt_living_room_edit})"
+      left: 25
+  -
+    id: 40
+    text: "How can you describe your perfect terrace, {name}?"
+    input:  "prompt_terrace"
+    after: "imageTerrace({prompt_terrace})"
+    next:
+      right: 45
+  - id: 45
+    text: "How can you the sketch of the kitchen?"
+    input: "prompt_terrace_edit"
+    after: "editTerrace({prompt_kitchen_edit})"
     next:
       right: 999
-      right-if: "contains({prompt}, 'bye')"
-      left: 2
+      right-if: "isEmpty({prompt_terrace_edit})"
+      left: 25
   -
     id: 999
     text: "Thank you, good bye!"

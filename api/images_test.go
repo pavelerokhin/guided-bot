@@ -1,15 +1,17 @@
 package api
 
 import (
-	"OpenAI-api/api/request"
 	"bytes"
-	"github.com/labstack/echo/v4"
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/labstack/echo/v4"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
+
+	"OpenAI-api/api/request"
 )
 
 func TestCreateGetRequestBody_ValidRequest(t *testing.T) {

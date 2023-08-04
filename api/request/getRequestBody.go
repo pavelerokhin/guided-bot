@@ -1,9 +1,11 @@
 package request
 
 import (
-	"OpenAI-api/api/model"
 	"errors"
+
 	"github.com/labstack/echo/v4"
+
+	"OpenAI-api/api/model"
 )
 
 func GetChatRequestBody(c echo.Context) (*model.ChatRequestBody, error) {

@@ -1,7 +1,6 @@
 package request
 
 import (
-	"OpenAI-api/api/model"
 	"encoding/json"
 	"errors"
 	"io"
@@ -11,6 +10,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"OpenAI-api/api/model"
 )
 
 type ClientMock struct {

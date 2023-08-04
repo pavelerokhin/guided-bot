@@ -1,14 +1,15 @@
 package main
 
 import (
-	"OpenAI-api/api"
 	"fmt"
-	"github.com/spf13/viper"
 	"os"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
+	"github.com/spf13/viper"
+
+	"OpenAI-api/api"
 )
 
 func main() {
